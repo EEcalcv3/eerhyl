@@ -46,10 +46,11 @@
         .run-rate-inputs { display: flex; justify-content: center; align-items: center; gap: 30px; margin-bottom: 15px; }
         
         .mission-message { margin-top: 15px; padding: 20px; border-radius: 8px; display: none; text-align: left; border-left: 6px solid; animation: fadeIn 0.5s ease; position: relative;}
-        .mission-behind { background-color: #fff5f5; border-color: #e74c3c; }
-        .mission-ahead { background-color: #f2faf6; border-color: #27ae60; }
-        .mission-comeback { background-color: #f4f6ff; border-color: #3498db; color: #2c3e50; }
-        .mission-raw { background-color: #fff0f0; border-color: #c0392b; color: #2c3e50; }
+        .mission-behind { background-color: #fff5f5; border-color: #e74c3c; } /* Red for behind */
+        .mission-ontrack { background-color: #fdfefe; border-color: #2c3e50; } /* Clean slate for on track */
+        .mission-ahead { background-color: #f2faf6; border-color: #27ae60; } /* Green for ahead */
+        .mission-comeback { background-color: #f4f6ff; border-color: #3498db; color: #2c3e50; } /* Blue for Momentum */
+        .mission-raw { background-color: #fff0f0; border-color: #c0392b; color: #2c3e50; } /* Dark red for raw math */
         
         .combo-box { background: white; margin-top: 10px; padding: 12px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); line-height: 1.8; transition: all 0.4s ease; }
         .strategy-label { display: block; color: #005c63; font-weight: bold; font-size: 0.85em; margin-bottom: 6px; text-transform: uppercase; }
@@ -240,7 +241,7 @@
     function fireConfetti(colors) {
         let confConfig = { particleCount: 100, spread: 70, origin: { y: 0.6 } };
         if (colors) { confConfig.colors = colors; }
-        confetti(confConfig);
+        if (typeof confetti === 'function') confetti(confConfig);
     }
 
     function animateValue(element, start, end, duration) {
@@ -325,7 +326,7 @@
     }
 
     function buildItem(item, qty) {
-        if (qty <= 0) return "";
+        if (!item || qty <= 0) return "";
         return `<span class="action-item" data-idx="${item.index}" data-qty="${qty}">${qty} ${item.name}</span>`;
     }
 
@@ -333,259 +334,327 @@
         const missionEl = document.getElementById('missionMessage');
         const shiftsLeft = pacingData.total - pacingData.completed;
 
-        if (pacingData.total <= 0 || pacingData.completed <= 0) {
-            missionEl.style.display = 'none';
-            // Reset fire mode if they zero out shifts
+        if (pacingData.total <= 0 || pacingData.completed <= 0 || active.length === 0) {
+            missionEl.style.display = 'block';
+            missionEl.className = "mission-message mission-ontrack";
+            missionEl.innerHTML = `<div style="text-align:center;"><strong>👋 Welcome to the Daily Coach!</strong><br><br><span style="font-size:0.9em; color:#555;">To unlock your personalised daily playbook, please enter your <strong>Targets</strong> below, and make sure your <strong>Total Shifts</strong> and <strong>Completed Shifts</strong> are set above.</span></div>`;
             document.body.classList.remove('body-fire');
             document.getElementById('mainContainer').classList.remove('container-fire');
             document.getElementById('mainLogo').classList.remove('logo-fire');
             return;
         }
-
-        missionEl.style.display = 'block';
         
-        if (currentP >= 75) {
-            let projEOM = (currentP / pacingData.completed) * pacingData.total;
-            missionEl.className = "mission-message mission-ahead";
-            missionEl.innerHTML = `<strong>💰 Commission Unlocked!</strong> You are pacing for <strong>${projEOM.toFixed(2)}%</strong> this month. Keep pushing those individual KPIs to maximize your payout!`;
-            return;
-        } 
-        
-        let today = new Date().toISOString().split('T')[0];
-        let dailyPicks = JSON.parse(localStorage.getItem('eeRhylCoachPicks')) || {};
-
-        if (dailyPicks.date !== today || !dailyPicks.hbb) {
-            let hbbItems = active.filter(c => c.name.includes("HBB"));
-            let baseHbb = hbbItems.length > 0 ? hbbItems[0] : active[0]; 
-            let otherItems = active.filter(c => c.name !== baseHbb.name);
-            if(otherItems.length === 0) otherItems = active;
-
-            let sortedDesc = [...otherItems].sort((a,b) => b.vps - a.vps);
-            let sortedAsc = [...otherItems].sort((a,b) => a.vps - b.vps);
-            let shuffled = [...otherItems].sort(() => 0.5 - Math.random());
-            let distinctWilds = [...new Set(shuffled.map(item => item.name))];
-
-            dailyPicks = {
-                date: today,
-                hbb: baseHbb.name,
-                heavy: sortedDesc[0].name,
-                vol1: sortedAsc[0].name,
-                vol2: sortedAsc.length > 1 ? sortedAsc[1].name : sortedAsc[0].name,
-                mid: sortedDesc[Math.floor(sortedDesc.length / 2)].name,
-                wilds: distinctWilds,
-                baseline: categories.map(c => c.achieved)
-            };
-            localStorage.setItem('eeRhylCoachPicks', JSON.stringify(dailyPicks));
+        if (shiftsLeft <= 0 && currentP < 75) {
+             missionEl.style.display = 'block';
+             missionEl.className = "mission-message mission-raw";
+             missionEl.innerHTML = `<div style="text-align:center;"><strong>🏁 Month Complete.</strong> You are out of shifts. Hit the Reset button below when you are ready to start fresh next month!</div>`;
+             return;
         }
 
-        if (shiftsLeft > 0) {
-            let rawDailyGoal = (75 - currentP) / shiftsLeft;
-            let dailyGoal = rawDailyGoal;
-            let isComebackMode = false;
+        try {
+            missionEl.style.display = 'block';
             
-            const standardDailyPace = 75 / pacingData.total; 
-            const expectedOverallNow = standardDailyPace * pacingData.completed;
-            const isAhead = currentP > expectedOverallNow;
-            const realisticStretchGoal = standardDailyPace * 1.5; 
-
-            if (rawDailyGoal > realisticStretchGoal) { 
-                isComebackMode = true; 
-            }
-
-            let usingCaps = true;
-            if (isComebackMode && !isRawMode) {
-                dailyGoal = realisticStretchGoal;
-            } else if (isComebackMode && isRawMode) {
-                usingCaps = false; 
-            }
-
-            function getActiveMaxQty(name) {
-                if (!usingCaps) return Infinity;
-                let upperName = name.toUpperCase();
-                if (upperName.includes("UPGRADE") || upperName.includes("SIM")) return 4;
-                if (upperName.includes("HANDSET") || upperName.includes("HBB") || upperName.includes("TV")) return 2;
-                return 3;
-            }
-
-            let getCat = (name) => active.find(c => c.name === name) || active[0];
-            let hbb = getCat(dailyPicks.hbb);
-            let heavy = getCat(dailyPicks.heavy);
-            let vol1 = getCat(dailyPicks.vol1);
-            let vol2 = getCat(dailyPicks.vol2);
-            let mid = getCat(dailyPicks.mid);
-
-            let remGoal = dailyGoal - hbb.vps;
-            let htmlContent = "";
-
-            // OPTION 1
-            let q1 = remGoal > 0 ? Math.ceil(remGoal / heavy.vps) : 0;
-            if (q1 > getActiveMaxQty(heavy.name)) { q1 = getActiveMaxQty(heavy.name); } 
-            
-            let opt1 = buildItem(hbb, 1);
-            if (q1 > 0) opt1 += ` <span class="action-or">+</span> ` + buildItem(heavy, q1);
-            htmlContent += `<div class="combo-box"><span class="strategy-label">Option 1: The Fast Track</span>${opt1}</div>`;
-
-            // OPTION 2
-            let q2_1 = 1; 
-            let rem2 = remGoal - vol1.vps;
-            let q2_2 = rem2 > 0 ? Math.ceil(rem2 / vol2.vps) : 1; 
-            
-            let opt2 = buildItem(hbb, 1);
-            if (vol1.name === vol2.name) {
-                let totalQ = Math.ceil(remGoal / vol1.vps);
-                if (totalQ > getActiveMaxQty(vol1.name)) totalQ = getActiveMaxQty(vol1.name);
-                opt2 += ` <span class="action-or">+</span> ` + buildItem(vol1, Math.max(1, totalQ));
-            } else {
-                if (q2_2 > getActiveMaxQty(vol2.name)) { q2_2 = getActiveMaxQty(vol2.name); }
-                opt2 += ` <span class="action-or">+</span> ` + buildItem(vol1, q2_1);
-                opt2 += ` <span class="action-or">+</span> ` + buildItem(vol2, q2_2);
-            }
-            htmlContent += `<div class="combo-box"><span class="strategy-label">Option 2: Small Wins (Volume)</span>${opt2}</div>`;
-
-            // OPTION 3
-            let q3Mid = remGoal > 0 ? 1 : 0;
-            if (remGoal <= 0) q3Mid = 1; 
-            
-            let bRem = remGoal - (q3Mid > 0 ? mid.vps : 0);
-            let q3Low = bRem > 0 ? Math.ceil(bRem / vol1.vps) : 0;
-            if (q3Low > getActiveMaxQty(vol1.name)) { q3Low = getActiveMaxQty(vol1.name); } 
-
-            let opt3 = buildItem(hbb, 1);
-            if (q3Mid > 0) opt3 += ` <span class="action-or">+</span> ` + buildItem(mid, q3Mid);
-            if (q3Low > 0 && vol1.name !== mid.name) opt3 += ` <span class="action-or">+</span> ` + buildItem(vol1, q3Low);
-            htmlContent += `<div class="combo-box"><span class="strategy-label">Option 3: The Balanced Basket</span>${opt3}</div>`;
-
-            // OPTION 4
-            let opt4 = buildItem(hbb, 1);
-            let rem4 = remGoal;
-            let wildCount = Math.min(dailyPicks.wilds.length, 3); 
-            
-            for(let w = 0; w < wildCount; w++) {
-                let wCat = getCat(dailyPicks.wilds[w]);
-                let wQty = 1;
-                if (w === wildCount - 1 && rem4 > wCat.vps) {
-                    wQty = Math.ceil(rem4 / wCat.vps);
-                    if (wQty > getActiveMaxQty(wCat.name)) wQty = getActiveMaxQty(wCat.name);
-                }
-                opt4 += ` <span class="action-or">+</span> ` + buildItem(wCat, wQty);
-                rem4 -= wCat.vps;
-            }
-            htmlContent += `<div class="combo-box"><span class="strategy-label">Option 4: The Wildcard</span>${opt4}</div>`;
-
-            // CONTROL HEADER
-            let controlsHTML = `<div class="coach-controls">`;
-            controlsHTML += `<button class="refresh-coach-btn" onclick="forceRefreshCoach()">🔄 Refresh Options</button>`;
-            
-            if (isComebackMode) {
-                controlsHTML += `
-                    <label style="font-size: 0.85em; cursor: pointer; display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.85); padding: 5px 12px; border-radius: 12px; font-weight: bold; color: #333; border: 1px solid #ccc; box-shadow: 0 2px 4px rgba(0,0,0,0.05); user-select: none;">
-                        <input type="checkbox" onchange="toggleRawMode(this)" ${isRawMode ? 'checked' : ''}>
-                        🔥 Raw Math Mode
-                    </label>`;
-            }
-            controlsHTML += `</div>`;
-
-            // DYNAMIC HEADERS
-            let headerText = "";
-            if (isComebackMode && isRawMode) {
-                missionEl.className = "mission-message mission-raw";
-                headerText = `<div style="margin-bottom:10px;"><strong>🔥 Raw Math Mode:</strong> This is the exact, unedited math to hit 75%. You need a massive <strong>${dailyGoal.toFixed(2)}%</strong> today:</div>`;
-            } else if (isComebackMode && !isRawMode) {
-                missionEl.className = "mission-message mission-comeback";
-                headerText = `<div style="margin-bottom:10px;"><strong>📈 Momentum Builder:</strong> You are slightly behind pace. Let's claw that back with a highly productive <strong>${dailyGoal.toFixed(2)}%</strong> shift today. Pick a battle plan:</div>`;
-            } else if (isAhead) {
+            if (currentP >= 75) {
+                let projEOM = (currentP / pacingData.completed) * pacingData.total;
                 missionEl.className = "mission-message mission-ahead";
-                headerText = `<div style="margin-bottom:10px;"><strong>🔥 Great Job:</strong> You are AHEAD of pace! Just add <strong>${dailyGoal.toFixed(2)}%</strong> today to easily maintain your lead:</div>`;
-            } else {
-                missionEl.className = "mission-message mission-behind"; 
-                headerText = `<div style="margin-bottom:10px;"><strong>🎯 Daily Coach:</strong> Add <strong>${dailyGoal.toFixed(2)}%</strong> today to stay exactly on track. Here are 4 ways to hit it:</div>`;
+                missionEl.innerHTML = `<strong>💰 Commission Unlocked!</strong> You are pacing for <strong>${projEOM.toFixed(2)}%</strong> this month. Keep pushing those individual KPIs to maximize your payout!`;
+                return;
+            } 
+            
+            let today = new Date().toISOString().split('T')[0];
+            let dailyPicks = JSON.parse(localStorage.getItem('eeRhylCoachPicks')) || {};
+
+            if (dailyPicks.date !== today || !dailyPicks.hbb || !dailyPicks.baseline || !dailyPicks.wilds) {
+                let hbbItems = active.filter(c => c.name.indexOf("HBB") !== -1);
+                let baseHbb = hbbItems.length > 0 ? hbbItems[0] : active[0]; 
+                let otherItems = active.filter(c => c.name !== baseHbb.name);
+                if(otherItems.length === 0) otherItems = active;
+
+                let sortedDesc = [...otherItems].sort((a,b) => b.vps - a.vps);
+                let sortedAsc = [...otherItems].sort((a,b) => a.vps - b.vps);
+                let shuffled = [...otherItems].sort(() => 0.5 - Math.random());
+                let distinctWilds = [];
+                for(let i=0; i<shuffled.length; i++){
+                    if(distinctWilds.indexOf(shuffled[i].name) === -1) distinctWilds.push(shuffled[i].name);
+                }
+
+                dailyPicks = {
+                    date: today,
+                    hbb: baseHbb.name,
+                    heavy: sortedDesc[0].name,
+                    vol1: sortedAsc[0].name,
+                    vol2: sortedAsc.length > 1 ? sortedAsc[1].name : sortedAsc[0].name,
+                    mid: sortedDesc[Math.floor(sortedDesc.length / 2)].name,
+                    wilds: distinctWilds,
+                    baseline: categories.map(c => c.achieved)
+                };
+                localStorage.setItem('eeRhylCoachPicks', JSON.stringify(dailyPicks));
             }
 
-            let prevCompletedBoxes = parseInt(missionEl.getAttribute('data-completed') || '0');
-            
-            missionEl.innerHTML = controlsHTML + headerText + htmlContent;
-
-            // --- STRIKETHROUGH LOGIC ---
-            let sessionSalesDiff = categories.map((c, idx) => c.achieved - (dailyPicks.baseline[idx] || 0));
-            let actionItems = missionEl.querySelectorAll('.action-item');
-            
-            actionItems.forEach(el => {
-                let idx = parseInt(el.getAttribute('data-idx'));
-                let qtyNeeded = parseInt(el.getAttribute('data-qty'));
+            if (shiftsLeft > 0) {
+                let rawDailyGoal = (75 - currentP) / shiftsLeft;
+                let dailyGoal = rawDailyGoal;
+                let isComebackMode = false;
                 
-                if (sessionSalesDiff[idx] >= qtyNeeded) {
-                    el.classList.add('crossed-off');
-                } else {
-                    el.classList.remove('crossed-off');
+                const standardDailyPace = 75 / pacingData.total; 
+                const expectedOverallNow = standardDailyPace * pacingData.completed;
+                const isAhead = currentP > expectedOverallNow;
+                const realisticStretchGoal = standardDailyPace * 1.5; 
+
+                if (rawDailyGoal > realisticStretchGoal) { 
+                    isComebackMode = true; 
                 }
-            });
 
-            // --- PROGRESSIVE BINGO SUCCESS LOGIC ---
-            let currentCompletedBoxes = 0;
-            let comboBoxes = missionEl.querySelectorAll('.combo-box');
-            
-            comboBoxes.forEach(box => {
-                let items = box.querySelectorAll('.action-item');
-                let isComplete = true;
-                if(items.length === 0) isComplete = false;
-                
-                items.forEach(item => {
-                    if(!item.classList.contains('crossed-off')) isComplete = false;
+                // --- DETERMINE IF PROMOTED MID-SHIFT ---
+                let baselineTotalKPI = 0;
+                let baseArr = dailyPicks.baseline || [];
+                categories.forEach((cat, idx) => {
+                    if(cat.target > 0) { baselineTotalKPI += ((baseArr[idx] || 0) / cat.target); }
                 });
+                let baselineP = (baselineTotalKPI / 6) * 100;
+                let startRawGoal = (75 - baselineP) / shiftsLeft;
+                let wasBehindAtStart = startRawGoal > (standardDailyPace * 1.5);
+                let gotPromoted = wasBehindAtStart && !isComebackMode;
+
+                let usingCaps = true;
+                if (isComebackMode && !isRawMode) {
+                    dailyGoal = realisticStretchGoal;
+                } else if (isComebackMode && isRawMode) {
+                    usingCaps = false; 
+                }
+
+                function getActiveMaxQty(name) {
+                    if (!usingCaps) return Infinity;
+                    if (!name) return 3;
+                    let upperName = name.toUpperCase();
+                    if (upperName.indexOf("UPGRADE") !== -1 || upperName.indexOf("SIM") !== -1) return 4;
+                    if (upperName.indexOf("HANDSET") !== -1 || upperName.indexOf("HBB") !== -1 || upperName.indexOf("TV") !== -1) return 2;
+                    return 3;
+                }
+
+                let getCat = (name) => {
+                    let found = active.filter(c => c.name === name);
+                    return found.length > 0 ? found[0] : active[0];
+                };
+
+                let hbb = getCat(dailyPicks.hbb);
+                let heavy = getCat(dailyPicks.heavy);
+                let vol1 = getCat(dailyPicks.vol1);
+                let vol2 = getCat(dailyPicks.vol2);
+                let mid = getCat(dailyPicks.mid);
+
+                let remGoal = dailyGoal - hbb.vps;
+                let htmlContent = "";
+
+                // OPTION 1
+                let q1 = remGoal > 0 ? Math.ceil(remGoal / heavy.vps) : 0;
+                if (q1 > getActiveMaxQty(heavy.name)) { q1 = getActiveMaxQty(heavy.name); } 
                 
-                if(isComplete) {
-                    box.style.borderColor = '#27ae60';
-                    box.style.backgroundColor = '#f0fdf4';
-                    currentCompletedBoxes++;
-                }
-            });
+                let opt1 = buildItem(hbb, 1);
+                if (q1 > 0) opt1 += ` <span class="action-or">+</span> ` + buildItem(heavy, q1);
+                htmlContent += `<div class="combo-box"><span class="strategy-label">Option 1: The Fast Track</span>${opt1}</div>`;
 
-            let successMessage = "";
-            let bgColor = "#d4edda";
-            let textColor = "#155724";
-            let borderColor = "#c3e6cb";
-            let extraClass = "";
-
-            if (currentCompletedBoxes === 1) {
-                successMessage = "🔥 BOOM! One target locked in! You've officially won the day.";
-            } else if (currentCompletedBoxes === 2) {
-                successMessage = "🚀 DOUBLE KILL! Two targets smashed. You are absolutely flying today!";
-                bgColor = "#cce5ff"; textColor = "#004085"; borderColor = "#b8daff";
-            } else if (currentCompletedBoxes === 3) {
-                successMessage = "⚡ TRIPLE THREAT! Three options cleared. You are carrying the store right now!";
-                bgColor = "#fff3cd"; textColor = "#856404"; borderColor = "#ffeeba";
-            } else if (currentCompletedBoxes === 4) {
-                successMessage = "🔥 LEGENDARY SHIFT! EVERY OPTION DESTROYED. YOU ARE ON FIRE! 🔥";
-                extraClass = "fire-banner"; 
-            }
-
-            let animStyle = (currentCompletedBoxes !== prevCompletedBoxes && currentCompletedBoxes !== 4) ? "animation: popIn 0.5s ease;" : "";
-            let styleText = `display: ${currentCompletedBoxes > 0 ? 'block' : 'none'}; background-color: ${bgColor}; color: ${textColor}; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: center; font-weight: bold; border: 2px solid ${borderColor}; ${animStyle} font-size: 1.1em;`;
-
-            let successHTML = `<div id="coachSuccessMessage" class="${extraClass}" style="${styleText}">${successMessage}</div>`;
-            missionEl.innerHTML += successHTML;
-
-            // --- THE GLOBAL FIRE OVERRIDE ---
-            if (currentCompletedBoxes === 4) {
-                document.body.classList.add('body-fire');
-                document.getElementById('mainContainer').classList.add('container-fire');
-                document.getElementById('mainLogo').classList.add('logo-fire');
-            } else {
-                document.body.classList.remove('body-fire');
-                document.getElementById('mainContainer').classList.remove('container-fire');
-                document.getElementById('mainLogo').classList.remove('logo-fire');
-            }
-
-            // Check if we need to fire confetti 
-            if (currentCompletedBoxes > prevCompletedBoxes) {
-                if (currentCompletedBoxes === 4) {
-                    fireConfetti(['#ff0000', '#ff5a00', '#ff9a00', '#ffce00']);
-                    setTimeout(() => fireConfetti(['#ff0000', '#ff5a00', '#ff9a00', '#ffce00']), 200);
+                // OPTION 2
+                let q2_1 = 1; 
+                let rem2 = remGoal - vol1.vps;
+                let q2_2 = rem2 > 0 ? Math.ceil(rem2 / vol2.vps) : 1; 
+                
+                let opt2 = buildItem(hbb, 1);
+                if (vol1.name === vol2.name) {
+                    let totalQ = Math.ceil(remGoal / vol1.vps);
+                    if (totalQ > getActiveMaxQty(vol1.name)) totalQ = getActiveMaxQty(vol1.name);
+                    opt2 += ` <span class="action-or">+</span> ` + buildItem(vol1, Math.max(1, totalQ));
                 } else {
-                    fireConfetti();
+                    if (q2_2 > getActiveMaxQty(vol2.name)) { q2_2 = getActiveMaxQty(vol2.name); }
+                    opt2 += ` <span class="action-or">+</span> ` + buildItem(vol1, q2_1);
+                    opt2 += ` <span class="action-or">+</span> ` + buildItem(vol2, q2_2);
                 }
+                htmlContent += `<div class="combo-box"><span class="strategy-label">Option 2: Small Wins (Volume)</span>${opt2}</div>`;
+
+                // OPTION 3
+                let q3Mid = remGoal > 0 ? 1 : 0;
+                if (remGoal <= 0) q3Mid = 1; 
+                
+                let bRem = remGoal - (q3Mid > 0 ? mid.vps : 0);
+                let q3Low = bRem > 0 ? Math.ceil(bRem / vol1.vps) : 0;
+                if (q3Low > getActiveMaxQty(vol1.name)) { q3Low = getActiveMaxQty(vol1.name); } 
+
+                let opt3 = buildItem(hbb, 1);
+                if (q3Mid > 0) opt3 += ` <span class="action-or">+</span> ` + buildItem(mid, q3Mid);
+                if (q3Low > 0 && vol1.name !== mid.name) opt3 += ` <span class="action-or">+</span> ` + buildItem(vol1, q3Low);
+                htmlContent += `<div class="combo-box"><span class="strategy-label">Option 3: The Balanced Basket</span>${opt3}</div>`;
+
+                // OPTION 4
+                let opt4 = buildItem(hbb, 1);
+                let rem4 = remGoal;
+                let safeWilds = dailyPicks.wilds || [];
+                let wildCount = Math.min(safeWilds.length, 3); 
+                
+                for(let w = 0; w < wildCount; w++) {
+                    let wCat = getCat(safeWilds[w]);
+                    let wQty = 1;
+                    if (w === wildCount - 1 && rem4 > wCat.vps) {
+                        wQty = Math.ceil(rem4 / wCat.vps);
+                        if (wQty > getActiveMaxQty(wCat.name)) wQty = getActiveMaxQty(wCat.name);
+                    }
+                    opt4 += ` <span class="action-or">+</span> ` + buildItem(wCat, wQty);
+                    rem4 -= wCat.vps;
+                }
+                htmlContent += `<div class="combo-box"><span class="strategy-label">Option 4: The Wildcard</span>${opt4}</div>`;
+
+                // CONTROL HEADER
+                let controlsHTML = `<div class="coach-controls">`;
+                controlsHTML += `<button class="refresh-coach-btn" onclick="forceRefreshCoach()">🔄 Refresh Options</button>`;
+                
+                if (isComebackMode) {
+                    controlsHTML += `
+                        <label style="font-size: 0.85em; cursor: pointer; display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.85); padding: 5px 12px; border-radius: 12px; font-weight: bold; color: #333; border: 1px solid #ccc; box-shadow: 0 2px 4px rgba(0,0,0,0.05); user-select: none;">
+                            <input type="checkbox" onchange="toggleRawMode(this)" ${isRawMode ? 'checked' : ''}>
+                            🔥 Raw Math Mode
+                        </label>`;
+                }
+                controlsHTML += `</div>`;
+
+                // DYNAMIC HEADERS & PROMO BADGE
+                let headerText = "";
+                let momentumEOM = currentP + (dailyGoal * shiftsLeft); 
+                let promoBadge = gotPromoted ? `<div style="background: #e8f4f8; color: #2980b9; padding: 12px; border-radius: 6px; margin-bottom: 12px; font-size: 0.95em; border-left: 5px solid #3498db; animation: popIn 0.5s ease;">🎉 <strong>MID-SHIFT PROMOTION!</strong> Your recent sales just pulled you out of the Momentum Builder. You are officially back on track!</div>` : "";
+
+                if (isComebackMode && isRawMode) {
+                    missionEl.className = "mission-message mission-raw";
+                    headerText = `<div style="margin-bottom:10px;"><strong>🔥 Raw Math Mode:</strong> This is the exact, unedited math to hit 75%. You need a massive <strong>${dailyGoal.toFixed(2)}%</strong> today:</div>`;
+                } else if (isComebackMode && !isRawMode) {
+                    missionEl.className = "mission-message mission-comeback";
+                    headerText = `<div style="margin-bottom:10px;"><strong>📈 Momentum Builder:</strong> You are slightly behind pace. Let's claw that back with a highly productive <strong>${dailyGoal.toFixed(2)}%</strong> shift today. <span style="color: #2980b9; font-weight: bold;">(Make no mistake, hitting any of these options is still considered a very good shift!)</span><br><span style="font-size: 0.85em; font-weight: normal; color: #555; margin-top: 5px; display: inline-block;"><em>(Note: Hitting this capped goal every remaining shift puts you on track to finish around <strong>${momentumEOM.toFixed(1)}%</strong>. Toggle Raw Math Mode to see the true daily rate needed for 75%).</em></span></div>`;
+                } else if (isAhead) {
+                    missionEl.className = "mission-message mission-ahead";
+                    headerText = promoBadge + `<div style="margin-bottom:10px;"><strong>🔥 Great Job:</strong> You are AHEAD of pace! Just add <strong>${dailyGoal.toFixed(2)}%</strong> today to easily maintain your lead:</div>`;
+                } else {
+                    missionEl.className = "mission-message mission-ontrack"; 
+                    headerText = promoBadge + `<div style="margin-bottom:10px;"><strong>🎯 Daily Coach:</strong> Add <strong>${dailyGoal.toFixed(2)}%</strong> today to stay exactly on track. Here are 4 ways to hit it:</div>`;
+                }
+
+                let prevCompletedBoxes = parseInt(missionEl.getAttribute('data-completed') || '0');
+                
+                missionEl.innerHTML = controlsHTML + headerText + htmlContent;
+
+                // --- STRIKETHROUGH LOGIC ---
+                let sessionSalesDiff = categories.map((c, idx) => c.achieved - (baseArr[idx] || 0));
+                let actionItems = missionEl.querySelectorAll('.action-item');
+                
+                for(let i=0; i<actionItems.length; i++){
+                    let el = actionItems[i];
+                    let idx = parseInt(el.getAttribute('data-idx'));
+                    let qtyNeeded = parseInt(el.getAttribute('data-qty'));
+                    
+                    if (sessionSalesDiff[idx] >= qtyNeeded) {
+                        el.classList.add('crossed-off');
+                    } else {
+                        el.classList.remove('crossed-off');
+                    }
+                }
+
+                // --- PROGRESSIVE BINGO SUCCESS LOGIC ---
+                let currentCompletedBoxes = 0;
+                let comboBoxes = missionEl.querySelectorAll('.combo-box');
+                
+                for(let c=0; c<comboBoxes.length; c++){
+                    let box = comboBoxes[c];
+                    let items = box.querySelectorAll('.action-item');
+                    let isComplete = true;
+                    if(items.length === 0) isComplete = false;
+                    
+                    for(let k=0; k<items.length; k++){
+                        if(!items[k].classList.contains('crossed-off')) isComplete = false;
+                    }
+                    
+                    if(isComplete) {
+                        box.style.borderColor = '#27ae60';
+                        box.style.backgroundColor = '#f0fdf4';
+                        currentCompletedBoxes++;
+                    }
+                }
+
+                // --- REFINED RENEGADE SHIFT LOGIC ---
+                let sessionGain = currentP - baselineP;
+                let isRogueHit = false;
+
+                if (currentCompletedBoxes === 0 && sessionGain > 0.01) {
+                    if (wasBehindAtStart) {
+                        if (isRawMode && sessionGain >= startRawGoal) { isRogueHit = true; }
+                    } else {
+                        if (sessionGain >= startRawGoal) { isRogueHit = true; }
+                    }
+                }
+
+                let successMessage = "";
+                let bgColor = "#d4edda";
+                let textColor = "#155724";
+                let borderColor = "#c3e6cb";
+                let extraClass = "";
+
+                if (currentCompletedBoxes === 1) {
+                    successMessage = "🔥 BOOM! One target locked in! You've officially won the day.";
+                } else if (currentCompletedBoxes === 2) {
+                    successMessage = "🚀 DOUBLE KILL! Two targets smashed. You are absolutely flying today!";
+                    bgColor = "#cce5ff"; textColor = "#004085"; borderColor = "#b8daff";
+                } else if (currentCompletedBoxes === 3) {
+                    successMessage = "⚡ TRIPLE THREAT! Three options cleared. You are carrying the store right now!";
+                    bgColor = "#fff3cd"; textColor = "#856404"; borderColor = "#ffeeba";
+                } else if (currentCompletedBoxes === 4) {
+                    successMessage = "🔥 LEGENDARY SHIFT! EVERY OPTION DESTROYED. YOU ARE ON FIRE! 🔥";
+                    extraClass = "fire-banner"; 
+                } else if (isRogueHit) {
+                    successMessage = "💡 RENEGADE SHIFT! You hit the raw numbers your own way. You won the day!";
+                    bgColor = "#f3e8ff"; textColor = "#6b21a8"; borderColor = "#d8b4fe"; 
+                }
+
+                let showBanner = currentCompletedBoxes > 0 || isRogueHit;
+                let prevRogueHit = missionEl.getAttribute('data-rogue') === 'true';
+
+                let animStyle = "";
+                if (currentCompletedBoxes !== prevCompletedBoxes && currentCompletedBoxes !== 4 && currentCompletedBoxes > 0) {
+                    animStyle = "animation: popIn 0.5s ease;";
+                } else if (isRogueHit && !prevRogueHit) {
+                    animStyle = "animation: popIn 0.5s ease;";
+                }
+
+                let styleText = `display: ${showBanner ? 'block' : 'none'}; background-color: ${bgColor}; color: ${textColor}; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: center; font-weight: bold; border: 2px solid ${borderColor}; ${animStyle} font-size: 1.1em;`;
+
+                let successHTML = `<div id="coachSuccessMessage" class="${extraClass}" style="${styleText}">${successMessage}</div>`;
+                missionEl.innerHTML += successHTML;
+
+                // --- THE GLOBAL FIRE OVERRIDE ---
+                if (currentCompletedBoxes === 4) {
+                    document.body.classList.add('body-fire');
+                    document.getElementById('mainContainer').classList.add('container-fire');
+                    document.getElementById('mainLogo').classList.add('logo-fire');
+                } else {
+                    document.body.classList.remove('body-fire');
+                    document.getElementById('mainContainer').classList.remove('container-fire');
+                    document.getElementById('mainLogo').classList.remove('logo-fire');
+                }
+
+                // Check if we need to fire confetti 
+                if (currentCompletedBoxes > prevCompletedBoxes) {
+                    if (currentCompletedBoxes === 4) {
+                        fireConfetti(['#ff0000', '#ff5a00', '#ff9a00', '#ffce00']);
+                        setTimeout(() => fireConfetti(['#ff0000', '#ff5a00', '#ff9a00', '#ffce00']), 200);
+                    } else {
+                        fireConfetti();
+                    }
+                } else if (isRogueHit && !prevRogueHit) {
+                    fireConfetti(['#a855f7', '#d8b4fe', '#ffffff']);
+                }
+
+                missionEl.setAttribute('data-completed', currentCompletedBoxes);
+                missionEl.setAttribute('data-rogue', isRogueHit);
             }
-            missionEl.setAttribute('data-completed', currentCompletedBoxes);
+        } catch (error) {
+            localStorage.removeItem('eeRhylCoachPicks');
+            missionEl.style.display = 'block';
+            missionEl.className = "mission-message mission-raw";
+            missionEl.innerHTML = `<div style="text-align:center;"><strong>⚙️ Diagnostics Scanner...</strong><br>We encountered a browser hiccup. Please tell Reece this error code: <br><br><span style="font-family:monospace; color:#c0392b;">${error.message}</span><br><br>Tap '+' on your shifts to reset.</div>`;
         }
     }
 
