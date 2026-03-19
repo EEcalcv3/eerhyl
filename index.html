@@ -218,14 +218,13 @@
     let previousKPIs = JSON.parse(localStorage.getItem('eeRhylPrevKPIs')) || [0,0,0,0,0,0];
     
     let isInitial = true;
-    let isSetupMode = false; /* NEW: Controls the Setup Pause */
+    let isSetupMode = false;
     let displayedCurrentOverall = 0;
     let displayedProjectedOverall = 0;
     let isRawMode = false;
 
     function vibrate() { if(navigator.vibrate) { navigator.vibrate(30); } }
     
-    /* NEW FUNCTION: Toggles Setup Mode */
     function toggleSetupMode() {
         vibrate();
         isSetupMode = !isSetupMode;
@@ -233,10 +232,17 @@
         if(isSetupMode) {
             btn.innerHTML = "✅ Save & Activate Coach";
             btn.style.backgroundColor = "#27ae60"; // Green for saving
+            
+            // VISUAL FREEZE ON TOP NUMBERS
+            document.getElementById('currentOverall').innerText = "---";
+            document.getElementById('projectedOverall').innerText = "---";
+            document.getElementById('currentOverall').style.color = "#ccc";
+            document.getElementById('projectedOverall').style.color = "#ccc";
+            
         } else {
             btn.innerHTML = "🛠️ Enable Setup Mode";
             btn.style.backgroundColor = "#f39c12"; // Orange for edit
-            isInitial = true; // Act like a fresh load so confetti doesn't falsely fire
+            isInitial = true; // Act like a fresh load
             localStorage.removeItem('eeRhylCoachPicks'); 
         }
         calculate();
@@ -301,6 +307,7 @@
             let fillEl = document.getElementById(`kpi-fill-${i}`);
             let textEl = document.getElementById(`kpi-text-${i}`);
             let vpsEl = document.getElementById(`vps-text-${i}`);
+            
             if (fillEl && textEl && vpsEl) {
                 let color = getKPIColor(p);
                 fillEl.style.width = Math.min(p, 100) + '%';
@@ -313,22 +320,31 @@
 
         const currentP = (totalKPI / 6) * 100;
         const projectedP = currentP + (totalWIF * 100);
-        const currentEl = document.getElementById('currentOverall');
-        const projectedEl = document.getElementById('projectedOverall');
 
-        if (isInitial) { currentEl.innerText = currentP.toFixed(2) + '%'; projectedEl.innerText = projectedP.toFixed(2) + '%'; } 
-        else { animateValue(currentEl, displayedCurrentOverall, currentP, 700); animateValue(projectedEl, displayedProjectedOverall, projectedP, 700); }
-        
-        displayedCurrentOverall = currentP; displayedProjectedOverall = projectedP;
-        currentEl.style.color = getOverallColor(currentP);
-        projectedEl.style.color = getOverallColor(projectedP);
+        // ONLY UPDATE TOP NUMBERS IF NOT IN SETUP MODE
+        if (!isSetupMode) {
+            const currentEl = document.getElementById('currentOverall');
+            const projectedEl = document.getElementById('projectedOverall');
+
+            if (isInitial) { 
+                currentEl.innerText = currentP.toFixed(2) + '%'; 
+                projectedEl.innerText = projectedP.toFixed(2) + '%'; 
+            } else { 
+                animateValue(currentEl, displayedCurrentOverall, currentP, 700); 
+                animateValue(projectedEl, displayedProjectedOverall, projectedP, 700); 
+            }
+            
+            displayedCurrentOverall = currentP; 
+            displayedProjectedOverall = projectedP;
+            currentEl.style.color = getOverallColor(currentP);
+            projectedEl.style.color = getOverallColor(projectedP);
+        }
 
         // --- SETUP MODE INTERCEPT ---
-        // If Setup Mode is active, we stop here. We don't fire confetti, rain gold, or update the coach.
         if (isSetupMode) {
             document.getElementById('missionMessage').style.display = 'block';
             document.getElementById('missionMessage').className = "mission-message mission-setup";
-            document.getElementById('missionMessage').innerHTML = `<div style="text-align:center;"><strong>🛠️ SETUP MODE ACTIVE</strong><br><br><span style="font-size:0.95em; color:#555;">Enter your mid-month numbers in peace. The Coach and animations are temporarily paused.<br><br>Click <strong>Save & Activate Coach</strong> at the top when you are finished!</span></div>`;
+            document.getElementById('missionMessage').innerHTML = `<div style="text-align:center;"><strong>🛠️ SETUP MODE ACTIVE</strong><br><br><span style="font-size:0.95em; color:#555;">Enter your mid-month numbers in peace. The Coach and master stats are paused.<br><br>Click <strong>Save & Activate Coach</strong> at the top when you are finished!</span></div>`;
             
             document.getElementById('maximizerMessage').style.display = 'none';
             document.getElementById('commissionBanner').style.display = 'none';
@@ -337,7 +353,6 @@
             document.getElementById('mainContainer').classList.remove('container-gold', 'container-fire');
             document.getElementById('mainLogo').classList.remove('logo-gold', 'logo-fire');
 
-            // Save the baseline silently so it doesn't trigger when we turn setup mode off
             localStorage.setItem('prevScore', currentP); 
             localStorage.setItem('eeRhylPrevKPIs', JSON.stringify(previousKPIs));
             return;
