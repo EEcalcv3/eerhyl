@@ -9,10 +9,10 @@
     
     <title>EE Rhyl Target Calculator</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #009aa6; color: #333; margin: 0; padding: 20px 10px; transition: background-color 0.8s ease; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #009aa6; color: #333; margin: 0; padding: 20px 10px; transition: background-color 0.8s ease, background 0.8s ease; -webkit-tap-highlight-color: transparent; }
         .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0, 50, 50, 0.3); border-top: 8px solid #005c63; transition: box-shadow 0.8s ease, border-top-color 0.8s ease; }
         .logo-container { text-align: center; margin-bottom: 20px; }
-        .code-logo { background-color: #009aa6; width: 85px; height: 85px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: #fff000; font-weight: 900; font-size: 38px; letter-spacing: -1px; border: 3px solid #fff000; transition: background-color 0.8s ease; }
+        .code-logo { background-color: #009aa6; width: 85px; height: 85px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: #fff000; font-weight: 900; font-size: 38px; letter-spacing: -1px; border: 3px solid #fff000; transition: all 0.8s ease; }
         
         h1 { color: #005c63; text-align: center; margin-bottom: 5px; font-size: 1.8em; }
         h2 { color: #009aa6; margin-bottom: 10px; margin-top: 30px; border-bottom: 2px solid #b2e0e3; padding-bottom: 5px; font-size: 1.3em; }
@@ -65,7 +65,7 @@
             animation: strike 0.3s ease-out forwards;
         }
 
-        .commission-banner { background: linear-gradient(135deg, #f1c40f, #f39c12); color: #fff; padding: 15px; border-radius: 8px; text-align: center; font-size: 1.1em; margin-bottom: 20px; display: none; border: 2px solid #e67e22; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .commission-banner { background: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7); color: #333; padding: 15px; border-radius: 8px; text-align: center; font-size: 1.1em; margin-bottom: 20px; display: none; border: 2px solid #d4af37; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4); text-shadow: 0 1px 0 rgba(255,255,255,0.5); }
         .reset-btn { display: block; width: 100%; padding: 15px; background-color: #e74c3c; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 30px; font-size: 1.1em; text-transform: uppercase; }
         .reset-btn:hover { background-color: #c0392b; }
         
@@ -75,6 +75,7 @@
         
         .credits { text-align: center; margin-top: 25px; font-size: 0.85em; color: #7f8c8d; font-style: italic; border-top: 1px solid #ecf0f1; padding-top: 15px; }
 
+        /* THE FIRE BANNER ANIMATION */
         .fire-banner {
             background: linear-gradient(45deg, #ff0000, #ff5a00, #ff9a00, #ffce00, #ff5a00);
             background-size: 300% 300%;
@@ -85,25 +86,44 @@
             box-shadow: 0 0 20px rgba(255, 90, 0, 0.6);
         }
 
+        /* EPIC FIRE MODE GLOBALS */
         body.body-fire { background-color: #2c0000; }
         .container.container-fire { box-shadow: 0 0 60px rgba(255, 60, 0, 0.7); border-top-color: #ff3c00; }
         .logo-fire { background-color: #ff3c00 !important; box-shadow: 0 0 20px rgba(255, 60, 0, 0.8); }
 
+        /* ✨ EPIC GOLD MODE GLOBALS ✨ */
+        body.body-gold { 
+            background: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c); 
+            background-size: 400% 400%;
+            animation: goldGradient 10s ease infinite;
+        }
+        .container.container-gold { 
+            box-shadow: 0 0 50px rgba(218, 165, 32, 0.6); 
+            border-top-color: #d4af37; 
+        }
+        .logo-gold { 
+            background: linear-gradient(45deg, #bf953f, #fcf6ba) !important; 
+            color: #333 !important; 
+            border-color: #fff !important; 
+            box-shadow: 0 0 25px rgba(218, 165, 32, 0.9); 
+        }
+
+        @keyframes goldGradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         @keyframes fireGradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         @keyframes strike { 0% { width: 0; } 100% { width: 90%; } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-        /* --- MOBILE OPTIMIZATIONS (Only affects screens under 600px) --- */
+        /* --- MOBILE OPTIMIZATIONS --- */
         @media (max-width: 600px) {
             .results-container { flex-direction: column; gap: 10px; }
             .result-value { font-size: 2.2em; }
             .run-rate-inputs { flex-direction: column; gap: 20px; }
-            .quick-add-btn { width: 42px; height: 42px; } /* Bigger tap targets for thumbs */
+            .quick-add-btn { width: 42px; height: 42px; } 
             input[type="number"] { width: 55px; font-size: 14px; }
             .container { padding: 15px; }
             h1 { font-size: 1.4em; }
-            td, th { padding: 8px 5px; font-size: 0.85em; } /* Tighter tables for small screens */
+            td, th { padding: 8px 5px; font-size: 0.85em; } 
             .action-item { font-size: 0.85em; padding: 5px 8px; }
         }
     </style>
@@ -120,7 +140,7 @@
     </div>
     
     <div id="commissionBanner" class="commission-banner">
-        🎉 <strong>COMMISSION UNLOCKED!</strong> You've hit 75% Overall. Any individual KPI you hit 100% on will now pay out!
+        🎉 <strong>COMMISSION UNLOCKED!</strong> You are in the money. Any individual KPI you hit 100% on will now pay out!
     </div>
 
     <div class="run-rate-box">
@@ -202,6 +222,23 @@
     function getOverallColor(p) { return p < 50 ? '#e74c3c' : p < 75 ? '#f39c12' : p < 125 ? '#27ae60' : '#2980b9'; }
     function fireConfetti(colors) { let confConfig = { particleCount: 100, spread: 70, origin: { y: 0.6 } }; if (colors) { confConfig.colors = colors; } if (typeof confetti === 'function') confetti(confConfig); }
 
+    function fireMoneyRain() {
+        if (typeof confetti !== 'function') return;
+        var duration = 3000;
+        var animationEnd = Date.now() + duration;
+        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1000, colors: ['#FFD700', '#DAA520', '#F8E231', '#ffffff'] };
+
+        function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+
+        var interval = setInterval(function() {
+            var timeLeft = animationEnd - Date.now();
+            if (timeLeft <= 0) { return clearInterval(interval); }
+            var particleCount = 50 * (timeLeft / duration);
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+        }, 250);
+    }
+
     function animateValue(element, start, end, duration) {
         let startTimestamp = null;
         const step = (timestamp) => {
@@ -256,10 +293,38 @@
         displayedCurrentOverall = currentP; displayedProjectedOverall = projectedP;
         currentEl.style.color = getOverallColor(currentP);
         projectedEl.style.color = getOverallColor(projectedP);
-        if (!isInitial && currentP >= 75 && parseFloat(localStorage.getItem('prevScore') || 0) < 75) { shouldFireConfetti = true; }
+
+        // --- GOLD RAIN & GOLD MODE CHECK ---
+        let hit75 = false;
+        let prevScore = parseFloat(localStorage.getItem('prevScore') || 0);
+        if (!isInitial && currentP >= 75 && prevScore < 75) { 
+            hit75 = true; 
+        }
         localStorage.setItem('prevScore', currentP);
-        if (shouldFireConfetti) fireConfetti();
+
+        if (hit75) {
+            fireMoneyRain();
+        } else if (shouldFireConfetti && currentP < 75) { 
+            fireConfetti(); 
+        }
+        
         document.getElementById('commissionBanner').style.display = currentP >= 75 ? 'block' : 'none';
+
+        // TOGGLE GOLD CSS CLASSES
+        if (currentP >= 75) {
+            document.body.classList.add('body-gold');
+            document.getElementById('mainContainer').classList.add('container-gold');
+            document.getElementById('mainLogo').classList.add('logo-gold');
+            
+            // Turn off Fire mode if it happens to be on
+            document.body.classList.remove('body-fire');
+            document.getElementById('mainContainer').classList.remove('container-fire');
+            document.getElementById('mainLogo').classList.remove('logo-fire');
+        } else {
+            document.body.classList.remove('body-gold');
+            document.getElementById('mainContainer').classList.remove('container-gold');
+            document.getElementById('mainLogo').classList.remove('logo-gold');
+        }
 
         updateMission(currentP, active);
         isInitial = false;
@@ -291,15 +356,15 @@
              return;
         }
 
+        // HIDE THE COACH COMPLETELY ONCE 75% IS HIT
+        if (currentP >= 75) {
+            missionEl.style.display = 'none';
+            // Note: Gold mode classes are handled in calculate()
+            return;
+        } 
+
         try {
             missionEl.style.display = 'block';
-            
-            if (currentP >= 75) {
-                let projEOM = (currentP / pacingData.completed) * pacingData.total;
-                missionEl.className = "mission-message mission-ahead";
-                missionEl.innerHTML = `<strong>💰 Commission Unlocked!</strong> You are pacing for <strong>${projEOM.toFixed(2)}%</strong> this month. Keep pushing those individual KPIs to maximize your payout!`;
-                return;
-            } 
             
             let today = new Date().toISOString().split('T')[0];
             let dailyPicks = JSON.parse(localStorage.getItem('eeRhylCoachPicks')) || {};
