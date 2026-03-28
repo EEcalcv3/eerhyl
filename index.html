@@ -156,7 +156,7 @@
 </head>
 <body>
 
-<div class="version-tag">v1.6.4</div>
+<div class="version-tag">v1.6.5</div>
 
 <div class="modal-overlay" id="devPasswordModal">
     <div class="modal-content" style="max-width: 350px; text-align: center; border-top: 6px solid #e74c3c;">
@@ -172,7 +172,7 @@
 <div class="modal-overlay" id="confirmShiftsModal">
     <div class="modal-content" style="max-width: 400px; text-align: center; border-top: 6px solid #27ae60;">
         <h3 style="margin-bottom: 15px; color: #27ae60; border-bottom: none;">✅ Confirm Completed Shifts</h3>
-        <p style="font-size: 1.1em; color: #333; margin-bottom: 25px;">Are you sure this is correct? Your app will be locked for the rest of the day once confirmed.</p>
+        <p style="font-size: 1.1em; color: #333; margin-bottom: 25px;">Are you sure this is correct? Your app will be locked for the rest of the day once confirmed. <strong>(Only do this the NEXT MORNING after your shift!)</strong></p>
         <div style="display: flex; gap: 10px; justify-content: center;">
             <button class="modal-btn" style="background: #95a5a6; margin-top: 0; width: 45%;" onclick="closeConfirmModal()">Cancel</button>
             <button class="modal-btn" style="background: #27ae60; margin-top: 0; width: 45%;" onclick="executeConfirmShifts()">Yes, Confirm</button>
@@ -184,13 +184,14 @@
     <div class="modal-content">
         <h3>🚀 Release Notes</h3>
         <div class="version-block">
-            <h4>v1.6.4</h4>
+            <h4>v1.6.5</h4>
             <p style="color: #555; font-size: 0.9em; margin-top: -5px;">Update by Reece:</p>
             <ul>
-                <li><strong>No More Decimals:</strong> Apologies for the regression! I permanently ripped out the decimal logic that reappeared in the buffer days. It is now completely locked back to clean, whole numbers (-1, 0, 1, 2).</li>
-                <li><strong>Phantom Crash Terminated:</strong> Removing the old 'Projected %' box caused a fatal invisible crash in the background, which completely stopped the Daily Tracker and Coach from loading. All phantom math has been scrubbed to restore full stability.</li>
-                <li><strong>Smart Visibility Tracker:</strong> Added an intelligent background tracker. If you leave the app open overnight, it will silently detect the date change and automatically refresh the page the next morning so the app is never out of sync.</li>
-                <li><strong>Mobile Layout & VPS Fix:</strong> The VPS column was pushed off-screen on some devices after removing the bottom table. Re-engineered the mobile CSS so all 5 columns (including VPS) auto-scale and fit perfectly on your phone screen without horizontal scrolling.</li>
+                <li><strong>Restored Custom Warnings:</strong> Reinstated the explicit warnings around updating shifts. The app now strictly reminds you to only add your completed shifts the "Next Morning" to prevent daily tracking errors.</li>
+                <li><strong>No More Decimals:</strong> Permanently ripped out the decimal logic that reappeared in the buffer days. It is now completely locked back to clean, whole numbers (-1, 0, 1, 2).</li>
+                <li><strong>Phantom Crash Terminated:</strong> Scrubbed out dead math that was blocking the coach banners.</li>
+                <li><strong>Smart Visibility Tracker:</strong> Added an intelligent background tracker to prevent the app from lagging behind if left open overnight.</li>
+                <li><strong>Mobile Layout Fix:</strong> Re-engineered the mobile CSS so all 5 columns (including VPS) auto-scale and fit perfectly on your phone screen.</li>
             </ul>
         </div>
         <button class="modal-btn" onclick="closeChangelog()">Amazing, thanks!</button>
@@ -230,13 +231,13 @@
 
     <div class="run-rate-box">
         <div id="shiftAlertBanner" class="shift-alert">
-            ⚠️ ALERT: YOU HAVEN'T UPDATED YOUR COMPLETED SHIFTS. PLEASE UPDATE IF YOU WORKED TODAY.
+            ⚠️ ALERT: DID YOU WORK YESTERDAY? PLEASE UPDATE YOUR COMPLETED SHIFTS.
         </div>
         
         <div class="run-rate-inputs">
             <div style="display:flex; flex-direction:column; align-items:center; position: relative;">
                 <label style="font-weight:bold; color:#005c63; text-transform:uppercase; font-size:0.85em;">Completed Shifts</label>
-                <span style="font-size: 0.7em; color: #777; font-style: italic; margin-top: 2px; user-select: none;">(Add AFTER shift ends)</span>
+                <span style="font-size: 0.7em; color: #e74c3c; font-weight: bold; margin-top: 2px; user-select: none;">(Update the NEXT MORNING)</span>
                 
                 <div style="display: flex; flex-direction: column; align-items: center; margin-top: 5px;">
                     <div class="quick-tap-cell" style="margin-bottom: 5px;">
@@ -309,7 +310,7 @@
 </div>
 
 <script>
-    const APP_VERSION = "1.6.4";
+    const APP_VERSION = "1.6.5";
 
     const defaultCategories = [
         { name: "NEW HANDSETS", target: 0, achieved: 0 },
@@ -531,7 +532,7 @@
             return false; 
         } else {
             shiftAlert.style.display = 'block';
-            shiftAlert.innerHTML = "⚠️ <strong>ACTION REQUIRED:</strong> UPDATE YOUR SHIFTS AND CLICK CONFIRM.";
+            shiftAlert.innerHTML = "⚠️ <strong>ACTION REQUIRED:</strong> DID YOU WORK YESTERDAY? PLEASE UPDATE YOUR SHIFTS AND CLICK CONFIRM.";
             shiftInput.disabled = false;
             plusBtn.style.display = 'inline-block';
             minusBtn.style.display = 'inline-block'; 
