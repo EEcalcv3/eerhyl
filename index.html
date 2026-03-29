@@ -156,7 +156,7 @@
 </head>
 <body>
 
-<div class="version-tag">v1.6.5</div>
+<div class="version-tag">v1.6.6</div>
 
 <div class="modal-overlay" id="devPasswordModal">
     <div class="modal-content" style="max-width: 350px; text-align: center; border-top: 6px solid #e74c3c;">
@@ -184,14 +184,14 @@
     <div class="modal-content">
         <h3>🚀 Release Notes</h3>
         <div class="version-block">
-            <h4>v1.6.5</h4>
+            <h4>v1.6.6</h4>
             <p style="color: #555; font-size: 0.9em; margin-top: -5px;">Update by Reece:</p>
             <ul>
-                <li><strong>Restored Custom Warnings:</strong> Reinstated the explicit warnings around updating shifts. The app now strictly reminds you to only add your completed shifts the "Next Morning" to prevent daily tracking errors.</li>
+                <li><strong>Restored Setup Instructions:</strong> Added the step-by-step setup guide and critical 'Next Morning' warnings back to the new-month screen so users know exactly how to activate the Coach without breaking their stats.</li>
                 <li><strong>No More Decimals:</strong> Permanently ripped out the decimal logic that reappeared in the buffer days. It is now completely locked back to clean, whole numbers (-1, 0, 1, 2).</li>
                 <li><strong>Phantom Crash Terminated:</strong> Scrubbed out dead math that was blocking the coach banners.</li>
                 <li><strong>Smart Visibility Tracker:</strong> Added an intelligent background tracker to prevent the app from lagging behind if left open overnight.</li>
-                <li><strong>Mobile Layout Fix:</strong> Re-engineered the mobile CSS so all 5 columns (including VPS) auto-scale and fit perfectly on your phone screen.</li>
+                <li><strong>Mobile Layout Fix:</strong> Re-engineered the mobile CSS so all columns fit perfectly on your phone screen.</li>
             </ul>
         </div>
         <button class="modal-btn" onclick="closeChangelog()">Amazing, thanks!</button>
@@ -310,7 +310,7 @@
 </div>
 
 <script>
-    const APP_VERSION = "1.6.5";
+    const APP_VERSION = "1.6.6";
 
     const defaultCategories = [
         { name: "NEW HANDSETS", target: 0, achieved: 0 },
@@ -712,7 +712,20 @@
             if (isSetupMode) {
                 document.getElementById('missionMessage').innerHTML = `<div style="text-align:center;"><strong>🛠️ SETUP MODE ACTIVE</strong><br><br><span style="font-size:0.95em; color:#555;">Enter your mid-month numbers in peace. The Coach and master stats are paused.<br><br>Click <strong>Save & Activate Coach</strong> at the top when you are finished!</span></div>`;
             } else {
-                document.getElementById('missionMessage').innerHTML = `<div style="text-align:center;"><strong>👋 Welcome to the Daily Coach!</strong><br><br><span style="font-size:0.9em; color:#555;">Please enter your Targets, Total Shifts, and Completed Shifts for the month below, then click <strong>Lock In Targets & Shifts</strong> at the top to unlock your playbook!</span></div>`;
+                document.getElementById('missionMessage').innerHTML = `
+                    <div style="padding: 10px;">
+                        <h3 style="color:#005c63; margin-top:0; text-align:center;">👋 Welcome to a New Month!</h3>
+                        <p style="color:#555; font-size:0.95em;">Here is how to set up your Daily Coach:</p>
+                        <ol style="color:#444; font-size:0.9em; padding-left: 20px; line-height: 1.6; margin-bottom: 15px;">
+                            <li>Enter your <strong>Monthly Targets</strong> in the table below.</li>
+                            <li>Enter your <strong>Total Shifts</strong> for the month.</li>
+                            <li>Leave <em>Completed Shifts</em> and <em>Achieved</em> at 0.</li>
+                            <li>Click <strong>🔒 Lock In Targets & Shifts</strong> at the top to activate your playbook!</li>
+                        </ol>
+                        <div style="background-color: #fff3cd; color: #856404; padding: 12px; border-radius: 6px; font-size: 0.85em; border: 1px solid #ffeeba;">
+                            ⚠️ <strong>CRITICAL RULE:</strong> You must ONLY update your Completed Shifts and Sales the <strong>NEXT MORNING</strong> after you work. Doing it during your shift will break the math!
+                        </div>
+                    </div>`;
             }
             
             document.getElementById('maximizerMessage').style.display = 'none';
@@ -1368,10 +1381,10 @@
     }
 
     function resetData() { 
-        if(confirm("Are you sure you want to reset all your data for the new month? This cannot be undone!")) { 
+        if(confirm("⚠️ WARNING: Are you sure you want to completely wipe all your data and start a new month? This cannot be undone!")) { 
             let todayStr = getTodayStr();
             categories = JSON.parse(JSON.stringify(defaultCategories));
-            pacingData = { completed: 0, total: 0, lastUpdate: todayStr, monthLocked: false }; 
+            pacingData = { completed: 0, total: 0, lastUpdate: "", monthLocked: false }; 
             localStorage.setItem('eeRhylTargets', JSON.stringify(categories));
             localStorage.setItem('eeRhylPacing', JSON.stringify(pacingData));
             localStorage.removeItem('eeRhylCoachPicks'); 
