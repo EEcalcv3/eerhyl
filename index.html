@@ -21,6 +21,79 @@
         
         h1 { color: #005c63; text-align: center; margin-bottom: 5px; font-size: 1.8em; }
         h2 { color: #009aa6; margin-bottom: 10px; margin-top: 30px; border-bottom: 2px solid #b2e0e3; padding-bottom: 5px; font-size: 1.3em; }
+
+        /* LIVE SCORECARD UI (LIGHT THEME) */
+        .scorecard-container { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 30px; border: 2px solid #b2e0e3; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .scorecard-header { text-align: center; margin-bottom: 20px; border-bottom: 2px dashed #b2e0e3; padding-bottom: 15px; }
+        .score-overall { font-size: 4em; font-weight: 900; line-height: 1; margin: 10px 0; color: #333; }
+        .score-overall.color-red { color: #e74c3c; } .score-overall.color-amber { color: #f39c12; } .score-overall.color-green { color: #27ae60; } .score-overall.color-blue { color: #3498db; }
+        
+        /* SCORE TRACKER BADGES - FIXED CSS TO PREVENT SPILLING */
+        .score-track-wrapper { 
+            width: 100%;
+            margin: 20px 0 10px 0; 
+            padding: 15px 2px 10px 2px; /* Top padding ensures red arrow isn't cut off */
+            overflow-x: auto; 
+            -webkit-overflow-scrolling: touch; 
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+            box-sizing: border-box;
+        }
+        .score-track-wrapper::-webkit-scrollbar { display: none; } /* Chrome, Safari */
+        
+        #score-track-container { 
+            display: flex; 
+            flex-wrap: nowrap; 
+            justify-content: flex-start;
+            align-items: center;
+            gap: 4px; 
+            min-width: max-content; 
+        }
+        
+        .track-node { 
+            background-color: #bdc3c7; 
+            color: white; 
+            padding: 6px 10px; 
+            border-radius: 4px; 
+            font-size: 0.85em; 
+            font-weight: bold; 
+            transition: all 0.3s ease; 
+            opacity: 0.5; 
+            flex-shrink: 0; /* Keeps them on one row without squishing text */
+            position: relative;
+        }
+        .track-node.amber { background-color: #f39c12; }
+        .track-node.green { background-color: #27ae60; }
+        .track-node.blue { background-color: #3498db; }
+        
+        .track-node.active { 
+            opacity: 1; 
+            transform: scale(1.15); 
+            z-index: 10; 
+            border: 2px solid #333; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3); 
+            margin: 0 6px;
+        }
+
+        /* RED ARROW POINTING AT ACTIVE NUMBER */
+        .track-node.active::before {
+            content: '';
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            margin-left: -7px;
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-top: 10px solid #e74c3c;
+        }
+
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+        .kpi-badge { background: #f2fafa; border-radius: 8px; padding: 12px 8px; text-align: center; border-top: 4px solid #7f8c8d; box-shadow: 0 2px 4px rgba(0,0,0,0.05); color: #333; }
+        .kpi-name { font-weight: bold; font-size: 0.8em; color: #005c63; margin-bottom: 8px; display: block; letter-spacing: 0.5px; text-transform: uppercase; }
+        .kpi-target { font-size: 0.75em; color: #555; line-height: 1.4; }
+        .kpi-target span { font-size: 1.2em; font-weight: bold; }
+        .kpi-blue-win { color: #3498db; font-size: 0.8em; font-weight: bold; animation: pulseBlue 2s infinite; }
+        @keyframes pulseBlue { 0% { opacity: 0.7; } 50% { opacity: 1; text-shadow: 0 0 8px rgba(52, 152, 219, 0.4); } 100% { opacity: 0.7; } }
         
         /* MODAL STYLING */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 9999; display: none; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; padding: 20px; box-sizing: border-box;}
@@ -98,11 +171,7 @@
         .action-or { font-weight: bold; color: #777; margin: 0 8px; font-size: 0.8em; }
         
         .action-item.crossed-off { background-color: #bdc3c7; color: #ecf0f1; opacity: 0.8; }
-        .action-item.crossed-off::after {
-            content: ''; position: absolute; top: 50%; left: 5%; width: 90%; height: 3px;
-            background-color: #e74c3c; transform: translateY(-50%);
-            animation: strike 0.2s ease-out forwards;
-        }
+        .action-item.crossed-off::after { content: ''; position: absolute; top: 50%; left: 5%; width: 90%; height: 3px; background-color: #e74c3c; transform: translateY(-50%); animation: strike 0.2s ease-out forwards; }
 
         .commission-banner { background: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7); color: #333; padding: 15px; border-radius: 8px; text-align: center; font-size: 1.1em; margin-bottom: 20px; display: none; border: 2px solid #d4af37; animation: popIn 0.3s ease; box-shadow: 0 4px 10px rgba(218, 165, 32, 0.3); text-shadow: 0 1px 0 rgba(255,255,255,0.5); transform: translateZ(0); }
         .reset-btn { display: block; width: 100%; padding: 15px; background-color: #e74c3c; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 30px; font-size: 1.1em; text-transform: uppercase; transform: translateZ(0); }
@@ -139,24 +208,30 @@
             .result-label { font-size: 0.65em; letter-spacing: 0; }
             .result-value { font-size: 2.2em; }
             .run-rate-inputs { flex-direction: column; gap: 20px; align-items: center;}
-            
             table { width: 100%; min-width: 100%; } 
             td, th { padding: 6px 1px; font-size: 0.70em; letter-spacing: -0.5px; text-align: center; } 
             th:first-child, td:first-child { text-align: left; }
             .quick-add-btn { width: 26px; height: 26px; font-size: 1.1em; } 
             input[type="number"] { font-size: 12px; width: 34px; padding: 4px; }
             .progress-text { font-size: 0.9em; }
-            
             h1 { font-size: 1.4em; }
             .action-item { font-size: 0.85em; padding: 5px 8px; }
             .version-tag { font-size: 0.7em; }
+            .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+            .kpi-name { font-size: 0.7em; }
+            .score-overall { font-size: 3em; }
+            
+            /* Tighter Track Padding on Mobile to fit all items */
+            .score-track-wrapper { padding-top: 15px; }
+            .track-node { font-size: 0.7em; padding: 5px 6px; }
+            #score-track-container { gap: 3px; }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body>
 
-<div class="version-tag">v1.6.13</div>
+<div class="version-tag">v1.6.18</div>
 
 <div class="modal-overlay" id="devPasswordModal">
     <div class="modal-content" style="max-width: 350px; text-align: center; border-top: 6px solid #e74c3c;">
@@ -184,12 +259,14 @@
     <div class="modal-content">
         <h3>🚀 Release Notes</h3>
         <div class="version-block">
-            <h4>v1.6.13</h4>
+            <h4>v1.6.18 - The Progress Track Update</h4>
             <p style="color: #555; font-size: 0.9em; margin-top: -5px;">Update by Reece:</p>
             <ul>
-                <li><strong>Static Shift Goals (The Gamified Checklist):</strong> The Daily RR column is now a frozen shift goal! Instead of the number dropping as you make sales, the number is locked at the start of your shift. When you successfully hit the target for that KPI today, the number transforms into a satisfying green "✓". It resets automatically the next morning.</li>
-                <li><strong>Crash Bug Terminated:</strong> Patched a critical logic flaw in the table renderer that caused the app to freeze when calculating the new Run Rate column. </li>
-                <li><strong>Coach Minimise Toggle:</strong> Tap 'Minimise' to save screen space when you just want to view your raw numbers, and 'Maximise' when you want your strategy back.</li>
+                <li><strong>Dynamic Number Track:</strong> Added a scrolling progress track beneath the Overall Score. It maps every score tier, and automatically highlights exactly where you are sitting on the line!</li>
+                <li><strong>Scorecard Upgrade Animation:</strong> The app now remembers your store's score. If your Overall Score bumps up to the next tier (e.g. Amber to Green), you'll trigger a massive confetti explosion across the screen!</li>
+                <li><strong>Average Footfall Added:</strong> Pulls your latest store footfall straight from the Google Sheet and displays it next to the overall score.</li>
+                <li><strong>Math Subtraction Fixed:</strong> The app accurately takes the "Total Required" and subtracts the "Sold Today" to display exactly what is left.</li>
+                <li><strong>No Two-Way Updating:</strong> Your personal calculator buttons will no longer send updates to the sheet. The scorecard is strictly read-only for the shop floor!</li>
             </ul>
         </div>
         <button class="modal-btn" onclick="closeChangelog()">Amazing, thanks!</button>
@@ -210,17 +287,48 @@
     </div>
 
     <h1>EE Rhyl Target Calculator</h1>
+
+    <div class="scorecard-container">
+        <div class="scorecard-header">
+            <span style="font-size:0.9em; letter-spacing:2px; text-transform:uppercase; color:#005c63; font-weight:bold;">Live Store Scorecard</span>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 30px; margin-top: 10px;">
+                <div>
+                    <div id="sc-overall-score" class="score-overall">--</div>
+                </div>
+                <div style="text-align: left; border-left: 2px dashed #b2e0e3; padding-left: 20px;">
+                    <div style="font-size: 0.85em; color: #777; text-transform: uppercase; font-weight: bold;">Avg Footfall</div>
+                    <div id="sc-footfall" style="font-size: 2em; font-weight: bold; color: #009aa6; line-height: 1.2;">--</div>
+                </div>
+            </div>
+            
+            <div class="score-track-wrapper">
+                <div id="score-track-container">
+                    </div>
+            </div>
+
+            <div style="font-size:0.85em; color:#7f8c8d; font-weight:bold; margin-top: 15px;" id="sc-last-sync">Syncing...</div>
+        </div>
+        <div class="kpi-grid" id="sc-kpi-grid">
+            <div style="grid-column: 1 / -1; text-align:center; padding: 20px; color:#7f8c8d;">
+                Connecting to Reece's Scorecard Engine
+            </div>
+        </div>
+        <div style="margin-top: 20px; padding: 15px; background-color: #f2fafa; border: 1px solid #b2e0e3; border-radius: 8px; font-size: 0.85em; color: #005c63; line-height: 1.5; text-align: center;">
+            <strong>Note:</strong> The top row are Primary KPI's, the bottom row are secondary KPIs. Primary KPI's must be kept at minimum Amber or above.<br>
+            <span style="font-style: italic; color: #555;">These targets are based on average footfall.</span>
+        </div>
+    </div>
     
     <button id="lockMonthBtn" class="setup-btn lock-btn" style="display: none;" onclick="lockMonth()">🔒 Lock In Targets & Shifts</button>
     <button id="setupModeBtn" class="setup-btn" style="display: none;" onclick="toggleSetupMode()">🛠️ Enable Setup Mode</button>
 
     <div class="results-container">
         <div class="result-box" style="flex: 1;">
-            <div class="result-label">CURRENT OVERALL %</div>
+            <div class="result-label">PERSONAL OVERALL %</div>
             <div class="result-value" id="currentOverall">0.00%</div>
         </div>
     </div>
-    
+
     <div id="bufferContainer" class="buffer-box"></div>
 
     <div id="commissionBanner" class="commission-banner">
@@ -307,9 +415,11 @@
     
     <div class="credits">Designed for EE Rhyl by Reece Farrelly</div>
 </div>
-
 <script>
-    const APP_VERSION = "1.6.13";
+    const APP_VERSION = "1.6.18";
+
+    // ⚠️ YOUR EXACT SCORECARD URL IS RESTORED HERE!
+    const SCORECARD_URL = "https://script.google.com/macros/s/AKfycbzrvHOKq0EX-xVQq6IQ-DjiCuFs3Hv2Z1X5cAZjhYEZjJjxMoWR_qqWT2jq2JDKamcQdQ/exec";
 
     const defaultCategories = [
         { name: "NEW HANDSETS", target: 0, achieved: 0 },
@@ -332,7 +442,148 @@
     let displayedCurrentOverall = 0;
 
     let simulatedDateOffset = parseInt(localStorage.getItem('eeRhylSimOffset')) || 0;
+
+    // --- SCORECARD ENGINE (READ ONLY) ---
+    const scColorMap = { "Red": "#e74c3c", "Amber": "#f39c12", "Green": "#27ae60", "Blue": "#3498db" };
     
+    let lastKnownStoreColor = null;
+    
+    // Exact threshold numbers provided by user
+    const trackVals = [
+        {v: 2.08, c: 'amber'}, {v: 2.17, c: 'amber'}, {v: 2.25, c: 'amber'}, {v: 2.33, c: 'amber'}, {v: 2.42, c: 'amber'}, {v: 2.50, c: 'amber'}, {v: 2.58, c: 'amber'}, {v: 2.67, c: 'amber'},
+        {v: 2.75, c: 'green'}, {v: 2.83, c: 'green'}, {v: 2.92, c: 'green'}, {v: 3.00, c: 'green'}, {v: 3.08, c: 'green'}, {v: 3.17, c: 'green'}, {v: 3.25, c: 'green'}, {v: 3.33, c: 'green'}, {v: 3.42, c: 'green'},
+        {v: 3.50, c: 'blue'}, {v: 3.58, c: 'blue'}, {v: 3.67, c: 'blue'}, {v: 3.75, c: 'blue'}, {v: 3.83, c: 'blue'}, {v: 3.92, c: 'blue'}, {v: 4.00, c: 'blue'}
+    ];
+
+    function fetchScorecard() {
+        if (!SCORECARD_URL) return;
+        let oldScript = document.getElementById('scorecard-jsonp');
+        if (oldScript) oldScript.remove();
+        let script = document.createElement('script');
+        script.id = 'scorecard-jsonp';
+        script.src = `${SCORECARD_URL}?action=read&callback=processScorecard&_bust=${Date.now()}`;
+        document.body.appendChild(script);
+    }
+
+    function processScorecard(data) {
+        if (data.error) {
+            document.getElementById('sc-kpi-grid').innerHTML = `<div style="grid-column: 1 / -1; color:#e74c3c;">${data.error}</div>`;
+            return;
+        }
+
+        let overallEl = document.getElementById('sc-overall-score');
+        let scoreVal = parseFloat(data.overallScore);
+        overallEl.innerText = isNaN(scoreVal) ? data.overallScore : scoreVal.toFixed(2);
+        
+        let currentColorStr = data.overallColor ? data.overallColor.charAt(0).toUpperCase() + data.overallColor.slice(1).toLowerCase() : "";
+        overallEl.className = 'score-overall';
+        if(currentColorStr) overallEl.classList.add('color-' + currentColorStr.toLowerCase());
+
+        // ANIMATION LOGIC: Did the store level up?
+        if (lastKnownStoreColor && lastKnownStoreColor !== currentColorStr) {
+            let tiers = { "Red": 1, "Amber": 2, "Green": 3, "Blue": 4 };
+            if (tiers[currentColorStr] > tiers[lastKnownStoreColor]) {
+                fireMoneyRain(); // Tier Upgraded! Fire massive confetti!
+            }
+        }
+        lastKnownStoreColor = currentColorStr;
+
+        // Update the Progress Number Track
+        let trackHtml = '';
+        let closestIdx = 0;
+        let minDiff = Infinity;
+        
+        if (!isNaN(scoreVal)) {
+            for(let i=0; i<trackVals.length; i++) {
+                let diff = Math.abs(scoreVal - trackVals[i].v);
+                if (diff < minDiff) { minDiff = diff; closestIdx = i; }
+            }
+        }
+        
+        for(let i=0; i<trackVals.length; i++) {
+            let isActive = (!isNaN(scoreVal) && i === closestIdx) ? 'active' : '';
+            trackHtml += `<div class="track-node ${trackVals[i].c} ${isActive}">${trackVals[i].v.toFixed(2)}</div>`;
+        }
+        
+        let trackContainer = document.getElementById('score-track-container');
+        if (trackContainer) {
+            trackContainer.innerHTML = trackHtml;
+            setTimeout(() => {
+                let activeNode = trackContainer.querySelector('.active');
+                if (activeNode) {
+                    activeNode.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                }
+            }, 300);
+        }
+
+        // Footfall update
+        let footfallEl = document.getElementById('sc-footfall');
+        if (footfallEl) {
+            if (data.footfall !== undefined && data.footfall !== null && data.footfall !== "") {
+                footfallEl.innerText = data.footfall.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            } else {
+                footfallEl.innerText = "--";
+            }
+        }
+
+        let d = new Date();
+        document.getElementById('sc-last-sync').innerText = `Live Sync Active • Last checked: ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+
+        let gridHtml = '';
+        data.kpis.forEach(kpi => {
+            if(!kpi.name) return;
+            
+            // MATH FIX: Extract the values and subtract the sold amount to get exactly what is remaining!
+            let sold = parseInt(kpi.soldToday) || 0;
+            let needA = parseInt(kpi.needAmber) || 0;
+            let needG = parseInt(kpi.needGreen) || 0;
+            let needB = parseInt(kpi.needBlue) || 0;
+            
+            let remAmber = needA > 0 ? Math.max(0, needA - sold) : 0;
+            let remGreen = needG > 0 ? Math.max(0, needG - sold) : 0;
+            let remBlue = needB > 0 ? Math.max(0, needB - sold) : 0;
+
+            let isTrackOnly = (needA === 0 && needG === 0 && needB === 0);
+            let displayColor = kpi.color;
+
+            // Prevent auto-upgrading to Blue if the targets are 0 (e.g., SR, NPS, COMPL)
+            if (!isTrackOnly) {
+                if (kpi.color === "Red" && remAmber <= 0 && needA > 0) displayColor = "Amber";
+                if ((displayColor === "Red" || displayColor === "Amber") && remGreen <= 0 && needG > 0) displayColor = "Green";
+                if (displayColor !== "Blue" && remBlue <= 0 && needB > 0) displayColor = "Blue";
+            }
+
+            let topBorder = scColorMap[displayColor] || "#95a5a6";
+            
+            gridHtml += `<div class="kpi-badge" style="border-top-color: ${topBorder}">
+                <span class="kpi-name">${kpi.name}</span>`;
+            
+            // Render the specific remaining amounts based on current color status
+            if (displayColor === "Blue") {
+                gridHtml += `<div class="kpi-blue-win">Keep going to keep this blue! 🟦</div>`;
+            } else if (isTrackOnly) {
+                 gridHtml += `<div class="kpi-target" style="font-weight:bold; color:${topBorder}; font-size:1em; margin-top:5px;">${displayColor}</div>`;
+            } else if (displayColor === "Green") {
+                if(needB > 0) gridHtml += `<div class="kpi-target">Need <span style="color:#3498db;">${remBlue}</span> for Blue</div>`;
+            } else if (displayColor === "Amber") {
+                if(needG > 0) gridHtml += `<div class="kpi-target">Need <span style="color:#27ae60;">${remGreen}</span> for Green</div>`;
+                if(needB > 0) gridHtml += `<div class="kpi-target">Need <span style="color:#3498db;">${remBlue}</span> for Blue</div>`;
+            } else { // Red
+                if(needA > 0) gridHtml += `<div class="kpi-target">Need <span style="color:#f39c12;">${remAmber}</span> for Amber</div>`;
+                if(needG > 0) gridHtml += `<div class="kpi-target">Need <span style="color:#27ae60;">${remGreen}</span> for Green</div>`;
+                if(needB > 0) gridHtml += `<div class="kpi-target">Need <span style="color:#3498db;">${remBlue}</span> for Blue</div>`;
+            }
+            gridHtml += `</div>`;
+        });
+
+        document.getElementById('sc-kpi-grid').innerHTML = gridHtml;
+    }
+
+    // Polling heartbeat
+    setInterval(fetchScorecard, 60000); 
+    setTimeout(fetchScorecard, 1000); 
+    // --- END SCORECARD ENGINE ---
+
     function getTodayStr() {
         let d = new Date();
         d.setDate(d.getDate() + simulatedDateOffset);
@@ -422,11 +673,11 @@
         isSetupMode = !isSetupMode;
         let btn = document.getElementById('setupModeBtn');
         if (btn) {
-            if(isSetupMode) {
-                btn.innerHTML = "✅ Save & Activate Coach";
+            if(isSetupMode) { 
+                btn.innerHTML = "✅ Save & Activate Coach"; 
                 btn.style.backgroundColor = "#27ae60"; 
-            } else {
-                btn.innerHTML = "🛠️ Enable Setup Mode";
+            } else { 
+                btn.innerHTML = "🛠️ Enable Setup Mode"; 
                 btn.style.backgroundColor = "#f39c12"; 
                 isInitial = true; 
                 localStorage.removeItem('eeRhylCoachPicks'); 
@@ -442,9 +693,9 @@
     }
 
     function lockMonth() {
-        if (pacingData.total <= 0) {
-            alert("Please enter your Total Shifts for the month before locking.");
-            return;
+        if (pacingData.total <= 0) { 
+            alert("Please enter your Total Shifts for the month before locking."); 
+            return; 
         }
         if (confirm("Are you sure this is correct? You won't be able to adjust targets or total shifts without developer access.")) {
             pacingData.monthLocked = true;
@@ -527,8 +778,11 @@
 
         if (!shiftInput) return false; 
 
-        if (!isDevMode) { if (minusBtn) minusBtn.style.display = 'none'; } 
-        else { if (minusBtn) minusBtn.style.display = 'inline-block'; }
+        if (!isDevMode) { 
+            if (minusBtn) minusBtn.style.display = 'none'; 
+        } else { 
+            if (minusBtn) minusBtn.style.display = 'inline-block'; 
+        }
 
         if (!pacingData.monthLocked || isSetupMode) {
             if (shiftAlert) shiftAlert.style.display = 'none';
@@ -599,12 +853,21 @@
         categories[i][f] = Math.max(0, (categories[i][f] || 0) + c); 
         let aInput = document.getElementById(`achieved-in-${i}`);
         let tInput = document.getElementById(`target-in-${i}`);
+        
         if (f === 'achieved' && aInput) { aInput.value = categories[i][f]; } 
         else if (f === 'target' && tInput) { tInput.value = categories[i][f]; }
+        
+        // No scorecard updates are sent here as requested!
+        
         updateData(i, f, categories[i][f]); 
     }
     
-    function updateData(i, f, v) { categories[i][f] = parseFloat(v) || 0; localStorage.setItem('eeRhylTargets', JSON.stringify(categories)); calculate(); }
+    function updateData(i, f, v) { 
+        categories[i][f] = parseFloat(v) || 0; 
+        localStorage.setItem('eeRhylTargets', JSON.stringify(categories)); 
+        calculate(); 
+    }
+
     function getKPIColor(p) { return p < 50 ? '#e74c3c' : p < 100 ? '#f39c12' : p < 125 ? '#27ae60' : '#2980b9'; }
     function getOverallColor(p) { return p < 50 ? '#e74c3c' : p < 75 ? '#f39c12' : p < 125 ? '#27ae60' : '#2980b9'; }
     
@@ -743,6 +1006,8 @@
         let shouldFireConfetti = false;
         let oldKPIs = [...previousKPIs];
         
+        let shiftsLeftInCalc = pacingData.total - pacingData.completed;
+
         categories.forEach((cat, i) => {
             let p = 0; let vps = 0;
             if(cat.target > 0) {
@@ -757,6 +1022,7 @@
             let fillEl = document.getElementById(`kpi-fill-${i}`);
             let textEl = document.getElementById(`kpi-text-${i}`);
             let vpsEl = document.getElementById(`vps-text-${i}`);
+            let rrEl = document.getElementById(`daily-rr-${i}`);
             
             if (fillEl && textEl && vpsEl) {
                 let color = getKPIColor(p);
@@ -765,6 +1031,24 @@
                 textEl.innerText = p.toFixed(2) + '%';
                 textEl.style.color = color;
                 vpsEl.innerText = vps.toFixed(2) + '%';
+            }
+
+            if (rrEl) {
+                let dailyRR = "-";
+                if (pacingData.total > 0) {
+                    if (cat.target > 0 && cat.achieved >= cat.target) {
+                        dailyRR = "✓";
+                        rrEl.style.color = "#27ae60";
+                    } else if (shiftsLeftInCalc > 0 && cat.target > 0) {
+                        let needed = cat.target - cat.achieved;
+                        dailyRR = Math.ceil(needed / shiftsLeftInCalc).toString();
+                        rrEl.style.color = "#d35400";
+                    } else if (cat.target > 0) {
+                        dailyRR = (cat.target - cat.achieved).toString();
+                        rrEl.style.color = "#d35400";
+                    }
+                }
+                rrEl.innerText = dailyRR;
             }
         });
 
@@ -1339,7 +1623,11 @@
                 let isComplete = true;
                 if(items.length === 0) isComplete = false;
                 for(let k=0; k<items.length; k++){ if(!items[k].classList.contains('crossed-off')) isComplete = false; }
-                if(isComplete) currentCompletedBoxes++;
+                if(isComplete) {
+                    box.style.borderColor = '#27ae60';
+                    box.style.backgroundColor = '#f0fdf4';
+                    currentCompletedBoxes++;
+                }
             }
 
             let isRogueHit = false;
