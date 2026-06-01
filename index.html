@@ -75,8 +75,9 @@
             margin: 0 5px;
         }
 
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
-        .kpi-badge { background: #f2fafa; border-radius: 8px; padding: 12px 8px; text-align: center; border-top: 4px solid #7f8c8d; box-shadow: 0 2px 4px rgba(0,0,0,0.05); color: #333; box-sizing: border-box; }
+        /* ⚠️ FIXED: Permanently locked to exactly 6 columns (2 rows) */
+        .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; width: 100%; overflow-x: auto; padding-bottom: 5px; }
+        .kpi-badge { background: #f2fafa; border-radius: 8px; padding: 12px 8px; text-align: center; border-top: 4px solid #7f8c8d; box-shadow: 0 2px 4px rgba(0,0,0,0.05); color: #333; box-sizing: border-box; min-width: 100px; }
         .kpi-name { font-weight: bold; font-size: 0.8em; color: #005c63; margin-bottom: 8px; display: block; letter-spacing: 0.5px; text-transform: uppercase; }
         .kpi-target { font-size: 0.75em; color: #555; line-height: 1.4; }
         .kpi-target span { font-size: 1.2em; font-weight: bold; }
@@ -205,7 +206,7 @@
             h1 { font-size: 1.4em; }
             .action-item { font-size: 0.85em; padding: 5px 8px; }
             .version-tag { font-size: 0.7em; }
-            .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+            .kpi-grid { grid-template-columns: repeat(6, 1fr); overflow-x: auto; padding-bottom: 10px; }
             .kpi-name { font-size: 0.7em; }
             .score-overall { font-size: 3em; }
             .track-node { font-size: 0.85em; padding: 6px 10px; }
@@ -215,7 +216,7 @@
 </head>
 <body>
 
-<div class="version-tag">v3.2.1</div>
+<div class="version-tag">v3.2.2</div>
 
 <div class="modal-overlay" id="devPasswordModal">
     <div class="modal-content" style="max-width: 350px; text-align: center; border-top: 6px solid #e74c3c;">
@@ -243,9 +244,10 @@
     <div class="modal-content">
         <h3>🚀 Release Notes</h3>
         <div class="version-block">
-            <h4>v3.2.1 - Automated TV Update</h4>
+            <h4>v3.2.2 - The UI Layout Fix</h4>
             <p style="color: #555; font-size: 0.9em; margin-top: -5px;">Update by Reece:</p>
             <ul>
+                <li><strong>2-Row Grid Lock:</strong> The 12 Scorecard KPIs are now explicitly forced into exactly 2 rows on ALL screens. You can swipe left and right on smaller phones!</li>
                 <li><strong>Automated TV Target:</strong> The TV target is now fully locked. It will automatically update to exactly 25% of your combined total achieved New HBB + Regrade sales, rounded to the nearest whole number!</li>
                 <li><strong>Live Number Track:</strong> Added a scrolling progress track beneath the Overall Score. It maps every score tier, and automatically highlights exactly where you are sitting on the line!</li>
                 <li><strong>Scorecard Upgrade Animation:</strong> The app now remembers your store's score. If your Overall Score bumps up to the next tier (e.g. Amber to Green), you'll trigger a massive confetti explosion across the screen!</li>
@@ -270,6 +272,7 @@
 
     <h1>EE Rhyl Target Calculator</h1>
 
+    <!-- 🟢 LIVE SCORECARD DASHBOARD -->
     <div class="scorecard-container">
         <div class="scorecard-header">
             <span style="font-size:0.9em; letter-spacing:2px; text-transform:uppercase; color:#005c63; font-weight:bold;">Live Store Scorecard</span>
@@ -283,16 +286,18 @@
                 </div>
             </div>
             
+            <!-- 🔢 THE LIVE NUMBER TRACKER (HORIZONTAL SCROLL) -->
             <div class="score-track-wrapper">
                 <div id="score-track-container">
-                    </div>
+                    <!-- JavaScript populates the numbers here -->
+                </div>
             </div>
 
             <div style="font-size:0.85em; color:#7f8c8d; font-weight:bold; margin-top: 15px;" id="sc-last-sync">Syncing...</div>
         </div>
         <div class="kpi-grid" id="sc-kpi-grid">
             <div style="grid-column: 1 / -1; text-align:center; padding: 20px; color:#7f8c8d;">
-                Connecting to Reece's Scorecard Engine...
+                Connecting to HQ Scorecard Matrix...
             </div>
         </div>
         <div style="margin-top: 20px; padding: 15px; background-color: #f2fafa; border: 1px solid #b2e0e3; border-radius: 8px; font-size: 0.85em; color: #005c63; line-height: 1.5; text-align: center;">
@@ -306,7 +311,7 @@
 
     <div class="results-container">
         <div class="result-box" style="flex: 1;">
-            <div class="result-label">PERSONAL OVERALL %</div>
+            <div class="result-label">PERSONAL COMMISSION %</div>
             <div class="result-value" id="currentOverall">0.00%</div>
         </div>
     </div>
@@ -398,7 +403,7 @@
     <div class="credits">Designed for EE Rhyl by Reece Farrelly</div>
 </div>
 <script>
-    const APP_VERSION = "3.2.1";
+    const APP_VERSION = "3.2.2";
 
     // ⚠️ CRITICAL: YOU MUST PASTE YOUR NEW GOOGLE SCRIPT URL HERE! ⚠️
     const SCORECARD_URL = "https://script.google.com/macros/s/AKfycbzrvHOKq0EX-xVQq6IQ-DjiCuFs3Hv2Z1X5cAZjhYEZjJjxMoWR_qqWT2jq2JDKamcQdQ/exec";
