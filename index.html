@@ -857,7 +857,7 @@
         let regHbbIdx = categories.findIndex(c => c.name === "REG HBB");
         if (tvIdx !== -1 && newHbbIdx !== -1 && regHbbIdx !== -1) {
             // ROUNDING LOGIC INCLUDED HERE
-            let calculatedTvTarget = Math.round((categories[newHbbIdx].achieved + categories[regHbbIdx].achieved) * 0.25);
+            let calculatedTvTarget = Math.ceil((categories[newHbbIdx].achieved + categories[regHbbIdx].achieved) * 0.25);
             categories[tvIdx].target = calculatedTvTarget;
             let tvSpan = document.getElementById(`target-span-${tvIdx}`);
             if (tvSpan) tvSpan.innerText = calculatedTvTarget;
